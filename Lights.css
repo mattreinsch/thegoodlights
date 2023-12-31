@@ -1,0 +1,127 @@
+/* This is a comment in CSS */
+/* You can name your CSS file anything you want, but usually it has a .css extension */
+/* Save this file in the same folder as your HTML file and link it using <link rel="stylesheet" href="style.css"> */
+
+/* Select the body element and apply some general styles */
+body {
+  /* Use a festive background image from a free online source */
+  background-image: url("https://www.transparenttextures.com/patterns/cubes.png");
+  /* Set the background color to a dark green */
+  background-color: #003300;
+  /* Set the font family to a cursive font */
+  font-family: "Brush Script MT", cursive;
+  /* Set the text color to white */
+  color: white;
+}
+
+/* Select the h1 element and apply some styles */
+h1 {
+  /* Center the text */
+  text-align: center;
+  /* Add some margin around the element */
+  margin: 20px;
+  /* Add some padding inside the element */
+  padding: 10px;
+  /* Add a border with a dashed style and a red color */
+  border: 5px dashed red;
+  /* Add a shadow effect to the text */
+  text-shadow: 2px 2px 5px black;
+}
+
+/* Select the h2 element and apply some styles */
+h2 {
+  /* Center the text */
+  text-align: center;
+  /* Add some margin around the element */
+  margin: 10px;
+  /* Add some padding inside the element */
+  padding: 10px;
+  /* Add a border with a solid style and a white color */
+  border: 3px solid white;
+  /* Add a shadow effect to the text */
+  text-shadow: 2px 2px 5px black;
+}
+
+/* Select the p element and apply some styles */
+p {
+  /* Align the text to the left */
+  text-align: left;
+  /* Add some margin around the element */
+  margin: 10px;
+  /* Add some padding inside the element */
+  padding: 10px;
+  /* Add a border with a dotted style and a yellow color */
+  border: 2px dotted yellow;
+  /* Add a shadow effect to the text */
+  text-shadow: 1px 1px 3px black;
+}
+
+/* Select the ul element and apply some styles */
+ul {
+  /* Align the text to the left */
+  text-align: left;
+  /* Add some margin around the element */
+  margin: 10px;
+  /* Add some padding inside the element */
+  padding: 10px;
+  /* Add a border with a double style and a blue color */
+  border: 4px double blue;
+  /* Add a shadow effect to the text */
+  text-shadow: 1px 1px 3px black;
+}
+
+/* Select the img element and apply some styles */
+img {
+  /* Center the image */
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  /* Add some margin around the element */
+  margin-top: 10px;
+  margin-bottom: 10px;
+  /* Add some padding inside the element */
+  padding: 10px;
+  /* Add a border with a groove style and a purple color */
+  border: 6px groove purple;
+  /* Add a shadow effect to the image */
+  box-shadow: 3px 3px 7px black;
+}
+
+/* Select the a element and apply some styles */
+a {
+  /* Align the text to the center */
+  display: block;
+  text-align: center;
+  /* Add some margin around the element */
+  margin: 10px;
+  /* Add some padding inside the element */
+  padding: 10px;
+  /* Add a border with a ridge style and a pink color */
+  border: 4px ridge pink;
+  /* Add a shadow effect to the text */
+  text-shadow: 2px 2px 5px black;
+  /* Set the text color to white */
+  color: white;
+  /* Set the text decoration to none */
+  text-decoration: none;
+}
+
+/* Select the a element when the mouse is over it and apply some styles */
+a:hover {
+  /* Set the background color to a light green */
+  background-color: #99ff99;
+  /* Set the text color to black */
+  color: black;
+  /* Set the text decoration to underline */
+  text-decoration: underline;
+}
+
+/* Select the strong element and apply some styles */
+strong {
+  /* Set the font size to larger */
+  font-size: larger;
+  /* Set the font weight to bolder */
+  font-weight: bolder;
+  /* Set the text color to orange */
+  color: orange;
+}
