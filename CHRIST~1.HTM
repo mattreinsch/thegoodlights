@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Christmas Lights Recommender</title>
+<style>
+  :root {
+    --red: #c0392b;
+    --red-dark: #96281b;
+    --red-light: #e74c3c;
+    --green: #1a6b2a;
+    --green-dark: #0f4018;
+    --green-light: #27ae60;
+    --gold: #f1c40f;
+    --gold-light: #f9e45b;
+    --white: #fefefe;
+    --bg: #0a1f0e;
+    --card-bg: #122018;
+    --card-border: #1e3d28;
+    --text: #e8f5e9;
+    --text-muted: #8fbc8f;
+    --chip-bg: #1a3522;
+    --chip-active: #c0392b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* ── Snowflakes ── */
+  .snow-layer {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .flake {
+    position: absolute;
+    top: -20px;
+    color: rgba(255,255,255,0.55);
+    font-size: 14px;
+    animation: fall linear infinite;
+    user-select: none;
+  }
+  @keyframes fall {
+    to { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+  }
+
+  /* ── Header ── */
+  header {
+    position: relative;
+    z-index: 2;
+    background: linear-gradient(135deg, var(--red-dark) 0%, var(--green-dark) 100%);
+    border-bottom: 3px solid var(--gold);
+    padding: 2rem 1rem 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+  .header-lights {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .bulb {
+    width: 14px; height: 20px;
+    border-radius: 50% 50% 40% 40%;
+    margin: 0 4px;
+    position: relative;
+    animation: glow 1.5s ease-in-out infinite alternate;
+  }
+  .bulb::before {
+    content: '';
+    display: block;
+    width: 6px; height: 5px;
+    background: #888;
+    margin: -5px auto 0;
+    border-radius: 2px 2px 0 0;
+  }
+  .bulb.r { background: #ff3333; box-shadow: 0 0 8px #ff3333, 0 0 20px #ff000066; }
+  .bulb.g { background: #33ff55; box-shadow: 0 0 8px #33ff55, 0 0 20px #00ff0066; animation-delay: 0.3s; }
+  .bulb.y { background: #ffee33; box-shadow: 0 0 8px #ffee33, 0 0 20px #ffff0066; animation-delay: 0.6s; }
+  .bulb.b { background: #3399ff; box-shadow: 0 0 8px #3399ff, 0 0 20px #0066ff66; animation-delay: 0.9s; }
+  .bulb.p { background: #cc44ff; box-shadow: 0 0 8px #cc44ff, 0 0 20px #9900ff66; animation-delay: 1.2s; }
+  @keyframes glow {
+    from { opacity: 0.7; }
+    to { opacity: 1; filter: brightness(1.3); }
+  }
+
+  header h1 {
+    font-size: clamp(1.6rem, 5vw, 2.6rem);
+    font-weight: 800;
+    color: var(--white);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6), 0 0 20px var(--gold);
+    letter-spacing: 0.5px;
+  }
+  header h1 span { color: var(--gold-light); }
+  header p {
+    margin-top: 0.4rem;
+    color: rgba(255,255,255,0.75);
+    font-size: 0.95rem;
+  }
+
+  /* ── Main ── */
+  main {
+    position: relative;
+    z-index: 2;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1rem 4rem;
+  }
+
+  /* ── Search ── */
+  .search-box {
+    background: var(--card-bg);
+    border: 2px solid var(--green-light);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(39,174,96,0.2);
+    margin-bottom: 1.25rem;
+  }
+  .search-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--green-light);
+    margin-bottom: 0.6rem;
+  }
+  .search-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+  #query {
+    flex: 1;
+    background: var(--bg);
+    border: 1.5px solid var(--card-border);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    color: var(--text);
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  #query:focus {
+    border-color: var(--green-light);
+    box-shadow: 0 0 0 3px rgba(39,174,96,0.15);
+  }
+  #query::placeholder { color: var(--text-muted); }
+  #searchBtn {
+    background: linear-gradient(135deg, var(--red), var(--red-dark));
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 0.75rem 1.4rem;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 3px 10px rgba(192,57,43,0.4);
+  }
+  #searchBtn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 16px rgba(192,57,43,0.55);
+  }
+  #searchBtn:active { transform: translateY(0); }
+
+  .examples {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .example-chip {
+    background: rgba(39,174,96,0.12);
+    border: 1px solid rgba(39,174,96,0.3);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    padding: 0.3rem 0.65rem;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .example-chip:hover {
+    background: rgba(39,174,96,0.25);
+    color: var(--text);
+  }
+
+  /* ── Filter chips ── */
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+  }
+  .filter-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-right: 0.25rem;
+  }
+  .chip {
+    background: var(--chip-bg);
+    border: 1.5px solid var(--card-border);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.35rem 0.85rem;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .chip:hover { border-color: var(--green-light); color: var(--text); }
+  .chip.active {
+    background: var(--chip-active);
+    border-color: var(--red-light);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(192,57,43,0.35);
+  }
+
+  /* ── Results header ── */
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  #resultsCount {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  #sortSelect {
+    background: var(--card-bg);
+    border: 1.5px solid var(--card-border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+    outline: none;
+    cursor: pointer;
+  }
+
+  /* ── Grid ── */
+  #results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.25rem;
+  }
+
+  /* ── Product card ── */
+  .card {
+    background: var(--card-bg);
+    border: 1.5px solid var(--card-border);
+    border-radius: 14px;
+    padding: 1.25rem;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    overflow: hidden;
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+    border-color: var(--green-light);
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--red), var(--gold), var(--green-light));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .card:hover::before { opacity: 1; }
+
+  /* Match badge */
+  .match-badge {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    background: var(--green-dark);
+    border: 1.5px solid var(--green-light);
+    color: var(--green-light);
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    padding: 0.25rem 0.55rem;
+    border-radius: 20px;
+  }
+  .match-badge.high {
+    background: rgba(39,174,96,0.2);
+    border-color: #2ecc71;
+    color: #2ecc71;
+    box-shadow: 0 0 8px rgba(46,204,113,0.3);
+  }
+  .match-badge.medium {
+    background: rgba(241,196,15,0.15);
+    border-color: var(--gold);
+    color: var(--gold-light);
+  }
+  .match-badge.low {
+    background: rgba(192,57,43,0.1);
+    border-color: var(--red);
+    color: #e17055;
+  }
+
+  /* Swatch area */
+  .card-swatch {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: 0.9rem;
+    align-items: center;
+  }
+  .swatch {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.15);
+    flex-shrink: 0;
+  }
+  .light-icon {
+    font-size: 1.4rem;
+    line-height: 1;
+  }
+
+  .card-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 0.35rem;
+    padding-right: 3.5rem; /* avoid badge overlap */
+    line-height: 1.3;
+  }
+  .card-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 0.9rem;
+  }
+
+  .card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-bottom: 0.9rem;
+  }
+  .tag {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .tag.indoor  { border-color: rgba(52,152,219,0.4); color: #74b9ff; }
+  .tag.outdoor { border-color: rgba(39,174,96,0.4); color: #55efc4; }
+  .tag.led     { border-color: rgba(241,196,15,0.4); color: #fdcb6e; }
+  .tag.inc     { border-color: rgba(230,126,34,0.4); color: #fab1a0; }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .price {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--gold-light);
+  }
+  .card-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: right;
+  }
+
+  /* ── Empty/intro state ── */
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+  }
+  .empty-state .big-icon { font-size: 3.5rem; margin-bottom: 0.75rem; }
+  .empty-state h3 { font-size: 1.2rem; color: var(--text); margin-bottom: 0.5rem; }
+  .empty-state p { font-size: 0.9rem; line-height: 1.6; }
+
+  /* ── Stars decoration ── */
+  .star-deco {
+    position: fixed;
+    pointer-events: none;
+    z-index: 0;
+    font-size: 12px;
+    color: rgba(255,255,255,0.3);
+    animation: twinkle 3s ease-in-out infinite;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 0.8; }
+  }
+
+  @media (max-width: 600px) {
+    .search-row { flex-direction: column; }
+    #searchBtn { width: 100%; }
+    #results { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Snow layer -->
+<div class="snow-layer" id="snowLayer"></div>
+
+<!-- Star decorations -->
+<div id="starLayer"></div>
+
+<header>
+  <div class="header-lights" id="headerLights"></div>
+  <h1>🎄 Christmas Lights <span>Recommender</span> ✨</h1>
+  <p>Describe what you need — we'll find your perfect lights</p>
+</header>
+
+<main>
+  <!-- Search -->
+  <div class="search-box">
+    <label class="search-label" for="query">✦ Describe Your Ideal Lights</label>
+    <div class="search-row">
+      <input type="text" id="query" placeholder="e.g. warm white outdoor LED lights for roofline, snow resistant, 100 feet…" autocomplete="off" />
+      <button id="searchBtn">🔍 Find Lights</button>
+    </div>
+    <div class="examples">
+      <span style="font-size:0.75rem;color:var(--text-muted);align-self:center;">Try:</span>
+      <span class="example-chip" onclick="setExample(this)">warm white indoor tree lights</span>
+      <span class="example-chip" onclick="setExample(this)">colorful outdoor twinkling LED roofline</span>
+      <span class="example-chip" onclick="setExample(this)">icicle lights for gutters weatherproof</span>
+      <span class="example-chip" onclick="setExample(this)">net lights for bushes multicolor</span>
+      <span class="example-chip" onclick="setExample(this)">curtain lights bedroom indoor</span>
+      <span class="example-chip" onclick="setExample(this)">large C9 bulbs pathway outdoor</span>
+    </div>
+  </div>
+
+  <!-- Filter chips -->
+  <div class="filters">
+    <span class="filter-label">Filter:</span>
+    <span class="chip" data-filter="indoor" onclick="toggleFilter(this)">🏠 Indoor</span>
+    <span class="chip" data-filter="outdoor" onclick="toggleFilter(this)">🌲 Outdoor</span>
+    <span class="chip" data-filter="led" onclick="toggleFilter(this)">⚡ LED</span>
+    <span class="chip" data-filter="incandescent" onclick="toggleFilter(this)">💡 Incandescent</span>
+    <span class="chip" data-filter="multicolor" onclick="toggleFilter(this)">🌈 Multicolor</span>
+    <span class="chip" data-filter="white" onclick="toggleFilter(this)">⬜ White</span>
+    <span class="chip" data-filter="warm white" onclick="toggleFilter(this)">🕯️ Warm White</span>
+    <span class="chip" data-filter="cool white" onclick="toggleFilter(this)">❄️ Cool White</span>
+  </div>
+
+  <!-- Results -->
+  <div class="results-header">
+    <span id="resultsCount"></span>
+    <select id="sortSelect" onchange="renderResults()">
+      <option value="match">Sort: Best Match</option>
+      <option value="price-asc">Sort: Price ↑</option>
+      <option value="price-desc">Sort: Price ↓</option>
+    </select>
+  </div>
+  <div id="results"></div>
+</main>
+
+<script>
+// ═══════════════════════════════════════════
+// PRODUCT CATALOG
+// ═══════════════════════════════════════════
+const PRODUCTS = [
+  {
+    id: 1,
+    name: "WarmGlow Pro String Lights",
+    desc: "Classic warm white LED string lights with a soft amber tone, perfect for indoor trees and mantles. Ultra-low power consumption.",
+    price: 18.99,
+    swatches: ["#ffcc66","#ffaa33"],
+    icon: "🌟",
+    attrs: {
+      placement: ["indoor"],
+      lightType: ["string"],
+      color: ["warm white"],
+      tech: ["led"],
+      useCase: ["tree","mantle","bedroom"],
+      style: ["static","fading"],
+      length: 25,
+      count: 100,
+      weatherResistant: false,
+      priceRange: "budget"
+    }
+  },
+  {
+    id: 2,
+    name: "Arctic Sparkle Cool White LED",
+    desc: "Crisp cool white LED string lights that mimic ice and snow. Great for outdoor displays and modern interior decor.",
+    price: 22.99,
+    swatches: ["#d6f0ff","#aaddff"],
+    icon: "❄️",
+    attrs: {
+      placement: ["indoor","outdoor"],
+      lightType: ["string"],
+      color: ["cool white","white"],
+      tech: ["led"],
+      useCase: ["tree","roofline","window","porch"],
+      style: ["static","twinkling"],
+      length: 50,
+      count: 200,
+      weatherResistant: true,
+      priceRange: "mid"
+    }
+  },
+  {
+    id: 3,
+    name: "FestiveBurst Multicolor String",
+    desc: "Vibrant multicolor LED string lights with red, green, blue, yellow, and orange bulbs. Kid-friendly and energy-efficient.",
+    price: 16.99,
+    swatches: ["#ff4444","#44ff66","#4488ff","#ffee33","#ff8833"],
+    icon: "🎉",
+    attrs: {
+      placement: ["indoor","outdoor"],
+      lightType: ["string"],
+      color: ["multicolor","red","green","blue","yellow","orange"],
+      tech: ["led"],
+      useCase: ["tree","bedroom","party","porch"],
+      style: ["twinkling","static","flashing"],
+      length: 25,
+      count: 100,
+      weatherResistant: true,
+      priceRange: "budget",
+      kidFriendly: true
+    }
+  },
+  {
+    id: 4,
+    name: "IceDrop Icicle Lights – Warm White",
+    desc: "Cascading warm white LED icicle lights, designed to hang from gutters and eaves. Weather-sealed connectors handle heavy snow and rain.",
+    price: 34.99,
+    swatches: ["#ffe5aa","#ffd066"],
+    icon: "🧊",
+    attrs: {
+      placement: ["outdoor"],
+      lightType: ["icicle"],
+      color: ["warm white","white"],
+      tech: ["led"],
+      useCase: ["roofline","gutter","eave","overhang"],
+      style: ["static","fading"],
+      length: 9,
+      count: 100,
+      weatherResistant: true,
+      snowResistant: true,
+      priceRange: "mid"
+    }
+  },
+  {
+    id: 5,
+    name: "IceDrop Icicle Lights – Multicolor",
+    desc: "Dazzling multicolor cascading icicle lights for a festive roofline display. IP44 rated against rain and snow.",
+    price: 36.99,
+    swatches: ["#ff4444","#44ff66","#4488ff","#ffee33"],
+    icon: "🌈",
+    attrs: {
+      placement: ["outdoor"],
+      lightType: ["icicle"],
+      color: ["multicolor"],
+      tech: ["led"],
+      useCase: ["roofline","gutter","eave","overhang"],
+      style: ["twinkling","flashing","static"],
+      length: 9,
+      count: 100,
+      weatherResistant: true,
+      snowResistant: true,
+      priceRange: "mid"
+    }
+  },
+  {
+    id: 6,
+    name: "GardenNet Multicolor Bush Lights",
+    desc: "4×6 ft net light panel for draping over bushes, shrubs, and hedges. Multicolor LEDs with 8 light modes.",
+    price: 24.99,
+    swatches: ["#ff4444","#44ff66","#4488ff","#ffee33","#ff88cc"],
+    icon: "🌿",
+    attrs: {
+      placement: ["outdoor"],
+      lightType: ["net"],
+      color: ["multicolor"],
+      tech: ["led"],
+      useCase: ["bush","shrub","hedge","ground"],
+      style: ["static","twinkling","chasing","flashing"],
+      length: 4,
+      count: 150,
+      weatherResistant: true,
+      priceRange: "mid"
+    }
+  },
+  {
+    id: 7,
+    name: "GardenNet Warm White Bush Lights",
+    desc: "Elegant warm white net lights for shrubs and small trees. Creates a magical soft glow for garden pathways.",
+    price: 22.99,
+    swatches: ["#ffcc77","#ffaa44"],
+    icon: "✨",
+    attrs: {
+      placement: ["outdoor"],
+      lightType: ["net"],
+      color: ["warm white","white"],
+      tech: ["led"],
+      useCase: ["bush","shrub","hedge","pathway","garden"],
+      style: ["static"],
+      length: 4,
+      count: 150,
+      weatherResistant: true,
+      priceRange: "mid"
+    }
+  },
+  {
+    id: 8,
+    name: "CurtainDrop Fairy Lights",
+    desc: "300 warm white micro LED curtain lights on 30 copper wire strands. Ideal for windows, bedrooms, and backdrop displays indoors.",
+    price: 28.99,
+    swatches: ["#ffe8b0","#ffd080"],
+    icon: "🪟",
+    attrs: {
+      placement: ["indoor"],
+      lightType: ["curtain"],
+      color: ["warm white","white"],
+      tech: ["led"],
+      useCase: ["window","bedroom","backdrop","wall","curtain"],
+      style: ["static","twinkling","fading"],
+      length: 9,
+      count: 300,
+      weatherResistant: false,
+      priceRange: "mid"
+    }
+  },
+  {
+    id: 9,
+    name: "RopeLight Classic Warm White",
+    desc: "Flexible 18ft warm white rope light with durable PVC tubing. Outline pathways, decks, and railings with ease.",
+    price: 29.99,
+    swatches: ["#ffdd99","#ffbb55"],
+    icon: "🔆",
+    attrs: {
+      placement: ["outdoor","indoor"],
+      lightType: ["rope"],
+      color: ["warm white","white"],
+      tech: ["led"],
+      useCase: ["pathway","deck","railing","outline","staircase"],
+      style: ["static"],
+      length: 18,
+      count: 540,
+      weatherResistant: true,
+      priceRange: "mid"
+    }
+  },
+  {
+    id: 10,
+    name: "C7 Retro Strand – Warm White",
+    desc: "Traditional C7 incandescent bulbs on black wire give a nostalgic warm glow. Perfect for outdoor rooflines and large displays.",
+    price: 38.99,
+    swatches: ["#ffcc66","#ff9900"],
+    icon: "💡",
+    attrs: {
+      placement: ["outdoor"],
+      lightType: ["string","c7"],
+      color: ["warm white","white","amber"],
+      tech: ["incandescent"],
+      useCase: ["roofline","eave","large display","house outline"],
+      style: ["static"],
+      length: 25,
+      count: 25,
+      weatherResistant: true,
+      priceRange: "mid"
+    }
+  },
+  {
+    id: 11,
+    name: "C9 Jumbo Pathway Bulbs – Multicolor",
+    desc: "Large C9 commercial-grade multicolor bulbs on heavy-duty wire. Excellent for driveways, pathways, and staking into ground.",
+    price: 54.99,
+    swatches: ["#ff4444","#44ff66","#4488ff","#ffee33","#ff8833"],
+    icon: "🛤️",
+    attrs: {
+      placement: ["outdoor"],
+      lightType: ["string","c9"],
+      color: ["multicolor"],
+      tech: ["incandescent"],
+      useCase: ["pathway","driveway","ground","stake","large display"],
+      style: ["static"],
+      length: 50,
+      count: 25,
+      weatherResistant: true,
+      priceRange: "premium"
+    }
+  },
+  {
+    id: 12,
+    name: "TwinkleStar Fairy Lights – Warm",
+    desc: "Ultra-fine copper wire fairy lights with tiny warm white LEDs. Battery-powered for flexible placement anywhere on your tree.",
+    price: 12.99,
+    swatches: ["#fff3cc","#ffdd88"],
+    icon: "⭐",
+    attrs: {
+      placement: ["indoor"],
+      lightType: ["string","fairy"],
+      color: ["warm white","white"],
+      tech: ["led"],
+      useCase: ["tree","bedroom","decoration","craft","jar"],
+      style: ["twinkling","static"],
+      length: 10,
+      count: 100,
+      weatherResistant: false,
+      batteryPowered: true,
+      priceRange: "budget",
+      kidFriendly: true
+    }
+  },
+  {
+    id: 13,
+    name: "SnowStorm Pro Outdoor Icicle – Cool White",
+    desc: "Heavy-duty cool white LED icicle lights with IP65 waterproof rating. Built for extreme winter conditions including heavy snow loads.",
+    price: 44.99,
+    swatches: ["#cceeff","#88ccff"],
+    icon: "🌨️",
+    attrs: {
+      placement: ["outdoor"],
+      lightType: ["icicle"],
+      color: ["cool white","white"],
+      tech: ["led"],
+      useCase: ["roofline","gutter","eave","large house"],
+      style: ["static","fading"],
+      length: 12,
+      count: 120,
+      weatherResistant: true,
+      snowResistant: true,
+      priceRange: "premium"
+    }
+  },
+  {
+    id: 14,
+    name: "ColorWave RGB Programmable String",
+    desc: "App-controlled RGB LED string lights with 16 million colors and 20+ preset effects. Indoor/outdoor smart lights.",
+    price: 49.99,
+    swatches: ["#ff3366","#33ff99","#3366ff","#ffcc00"],
+    icon: "🎨",
+    attrs: {
+      placement: ["indoor","outdoor"],
+      lightType: ["string"],
+      color: ["multicolor","rgb","red","green","blue","pink","purple"],
+      tech: ["led","smart"],
+      useCase: ["tree","roofline","bedroom","party","window"],
+      style: ["twinkling","chasing","fading","static","flashing"],
+      length: 33,
+      count: 100,
+      weatherResistant: true,
+      priceRange: "premium",
+      kidFriendly: true
+    }
+  },
+  {
+    id: 15,
+    name: "Vintage Edison Bulb Strand",
+    desc: "Large globe Edison-style incandescent bulbs on black wire. Rustic warm amber glow for outdoor patios and garden parties.",
+    price: 42.99,
+    swatches: ["#ffbb44","#ff9922"],
+    icon: "🔆",
+    attrs: {
+      placement: ["outdoor","indoor"],
+      lightType: ["string","globe"],
+      color: ["warm white","amber","white"],
+      tech: ["incandescent"],
+      useCase: ["patio","garden","pergola","outdoor dining","backdrop"],
+      style: ["static"],
+      length: 25,
+      count: 25,
+      weatherResistant: true,
+      priceRange: "mid"
+    }
+  },
+  {
+    id: 16,
+    name: "MiniCluster Tree Wrap Lights",
+    desc: "Dense cluster of 200 warm white mini LED lights on flexible green wire. Wraps tightly around tree trunks and branches.",
+    price: 26.99,
+    swatches: ["#ffe0aa","#ffcc77"],
+    icon: "🌲",
+    attrs: {
+      placement: ["outdoor","indoor"],
+      lightType: ["string","cluster"],
+      color: ["warm white","white"],
+      tech: ["led"],
+      useCase: ["tree","trunk wrap","branch","bush"],
+      style: ["static","twinkling"],
+      length: 16,
+      count: 200,
+      weatherResistant: true,
+      priceRange: "mid"
+    }
+  },
+  {
+    id: 17,
+    name: "Polar White Cool LED Roofline Kit",
+    desc: "150ft mega roofline kit with cool white LED string lights and mounting clips included. Covers large homes easily.",
+    price: 64.99,
+    swatches: ["#e0f4ff","#bbddff"],
+    icon: "🏠",
+    attrs: {
+      placement: ["outdoor"],
+      lightType: ["string"],
+      color: ["cool white","white"],
+      tech: ["led"],
+      useCase: ["roofline","gutter","eave","large house"],
+      style: ["static","twinkling"],
+      length: 150,
+      count: 600,
+      weatherResistant: true,
+      snowResistant: true,
+      priceRange: "premium"
+    }
+  },
+  {
+    id: 18,
+    name: "Mini Multicolor Incandescent String",
+    desc: "Traditional mini incandescent multicolor lights with classic nostalgic warmth. 50 bulbs on green wire for smaller trees and indoor use.",
+    price: 9.99,
+    swatches: ["#ff4444","#44ff66","#ffee33","#4488ff","#ff8833"],
+    icon: "🎄",
+    attrs: {
+      placement: ["indoor"],
+      lightType: ["string","mini"],
+      color: ["multicolor"],
+      tech: ["incandescent"],
+      useCase: ["tree","mantle","indoor decoration"],
+      style: ["static","twinkling"],
+      length: 10,
+      count: 50,
+      weatherResistant: false,
+      priceRange: "budget",
+      kidFriendly: true
+    }
+  },
+  {
+    id: 19,
+    name: "SolarPath Stake Lights – Warm White",
+    desc: "Solar-powered warm white LED pathway stake lights. No wiring needed — charge by day, glow by night for pathways and driveways.",
+    price: 32.99,
+    swatches: ["#ffdd99","#ffbb66"],
+    icon: "☀️",
+    attrs: {
+      placement: ["outdoor"],
+      lightType: ["stake","solar"],
+      color: ["warm white","white"],
+      tech: ["led","solar"],
+      useCase: ["pathway","driveway","garden","walkway"],
+      style: ["static"],
+      length: 0,
+      count: 12,
+      weatherResistant: true,
+      priceRange: "mid",
+      solarPowered: true
+    }
+  },
+  {
+    id: 20,
+    name: "PurpleBlue Fantasy String Lights",
+    desc: "Unique purple and blue LED string lights for a cool, magical winter atmosphere. Great for themed trees and window displays.",
+    price: 19.99,
+    swatches: ["#aa44ff","#4466ff"],
+    icon: "💜",
+    attrs: {
+      placement: ["indoor"],
+      lightType: ["string"],
+      color: ["purple","blue"],
+      tech: ["led"],
+      useCase: ["tree","window","bedroom","themed decoration"],
+      style: ["twinkling","static","fading"],
+      length: 20,
+      count: 100,
+      weatherResistant: false,
+      priceRange: "budget"
+    }
+  }
+];
+
+// ═══════════════════════════════════════════
+// SCORING ENGINE
+// ═══════════════════════════════════════════
+const KEYWORD_MAP = {
+  // Placement
+  indoor: { field: "placement", value: "indoor", weight: 10 },
+  inside: { field: "placement", value: "indoor", weight: 10 },
+  "in the house": { field: "placement", value: "indoor", weight: 10 },
+  outdoor: { field: "placement", value: "outdoor", weight: 10 },
+  outside: { field: "placement", value: "outdoor", weight: 10 },
+  exterior: { field: "placement", value: "outdoor", weight: 10 },
+
+  // Light types
+  icicle: { field: "lightType", value: "icicle", weight: 12 },
+  icicles: { field: "lightType", value: "icicle", weight: 12 },
+  net: { field: "lightType", value: "net", weight: 12 },
+  "net light": { field: "lightType", value: "net", weight: 12 },
+  rope: { field: "lightType", value: "rope", weight: 12 },
+  "rope light": { field: "lightType", value: "rope", weight: 12 },
+  curtain: { field: "lightType", value: "curtain", weight: 12 },
+  fairy: { field: "lightType", value: "fairy", weight: 12 },
+  globe: { field: "lightType", value: "globe", weight: 10 },
+  c7: { field: "lightType", value: "c7", weight: 14 },
+  c9: { field: "lightType", value: "c9", weight: 14 },
+  stake: { field: "lightType", value: "stake", weight: 12 },
+  cluster: { field: "lightType", value: "cluster", weight: 10 },
+  mini: { field: "lightType", value: "mini", weight: 8 },
+  string: { field: "lightType", value: "string", weight: 8 },
+
+  // Colors
+  "warm white": { field: "color", value: "warm white", weight: 12 },
+  warm: { field: "color", value: "warm white", weight: 8 },
+  "cool white": { field: "color", value: "cool white", weight: 12 },
+  cool: { field: "color", value: "cool white", weight: 6 },
+  "cold white": { field: "color", value: "cool white", weight: 10 },
+  multicolor: { field: "color", value: "multicolor", weight: 12 },
+  colorful: { field: "color", value: "multicolor", weight: 10 },
+  "multi color": { field: "color", value: "multicolor", weight: 12 },
+  rainbow: { field: "color", value: "multicolor", weight: 10 },
+  colored: { field: "color", value: "multicolor", weight: 8 },
+  white: { field: "color", value: "white", weight: 8 },
+  amber: { field: "color", value: "amber", weight: 10 },
+  red: { field: "color", value: "red", weight: 8 },
+  green: { field: "color", value: "green", weight: 8 },
+  blue: { field: "color", value: "blue", weight: 8 },
+  purple: { field: "color", value: "purple", weight: 8 },
+  pink: { field: "color", value: "pink", weight: 8 },
+  rgb: { field: "color", value: "rgb", weight: 10 },
+
+  // Tech
+  led: { field: "tech", value: "led", weight: 10 },
+  incandescent: { field: "tech", value: "incandescent", weight: 10 },
+  traditional: { field: "tech", value: "incandescent", weight: 6 },
+  classic: { field: "tech", value: "incandescent", weight: 5 },
+  solar: { field: "tech", value: "solar", weight: 12 },
+  "solar powered": { field: "tech", value: "solar", weight: 12 },
+  smart: { field: "tech", value: "smart", weight: 10 },
+  app: { field: "tech", value: "smart", weight: 8 },
+  battery: { field: "attrs", value: "batteryPowered", weight: 10 },
+  "battery powered": { field: "attrs", value: "batteryPowered", weight: 12 },
+
+  // Use cases
+  tree: { field: "useCase", value: "tree", weight: 12 },
+  "christmas tree": { field: "useCase", value: "tree", weight: 14 },
+  roofline: { field: "useCase", value: "roofline", weight: 14 },
+  roof: { field: "useCase", value: "roofline", weight: 12 },
+  gutter: { field: "useCase", value: "gutter", weight: 12 },
+  eave: { field: "useCase", value: "eave", weight: 12 },
+  pathway: { field: "useCase", value: "pathway", weight: 12 },
+  walkway: { field: "useCase", value: "pathway", weight: 10 },
+  driveway: { field: "useCase", value: "driveway", weight: 12 },
+  bush: { field: "useCase", value: "bush", weight: 12 },
+  shrub: { field: "useCase", value: "shrub", weight: 12 },
+  hedge: { field: "useCase", value: "hedge", weight: 12 },
+  window: { field: "useCase", value: "window", weight: 12 },
+  bedroom: { field: "useCase", value: "bedroom", weight: 12 },
+  mantle: { field: "useCase", value: "mantle", weight: 12 },
+  porch: { field: "useCase", value: "porch", weight: 10 },
+  deck: { field: "useCase", value: "deck", weight: 10 },
+  patio: { field: "useCase", value: "patio", weight: 10 },
+  garden: { field: "useCase", value: "garden", weight: 10 },
+  backdrop: { field: "useCase", value: "backdrop", weight: 10 },
+  pergola: { field: "useCase", value: "pergola", weight: 10 },
+
+  // Style
+  twinkling: { field: "style", value: "twinkling", weight: 10 },
+  twinkle: { field: "style", value: "twinkling", weight: 10 },
+  flashing: { field: "style", value: "flashing", weight: 8 },
+  flash: { field: "style", value: "flashing", weight: 8 },
+  fading: { field: "style", value: "fading", weight: 8 },
+  fade: { field: "style", value: "fading", weight: 8 },
+  chasing: { field: "style", value: "chasing", weight: 8 },
+  static: { field: "style", value: "static", weight: 6 },
+  steady: { field: "style", value: "static", weight: 6 },
+
+  // Weather
+  "weather resistant": { field: "attrs", value: "weatherResistant", weight: 10 },
+  weatherproof: { field: "attrs", value: "weatherResistant", weight: 10 },
+  waterproof: { field: "attrs", value: "weatherResistant", weight: 10 },
+  snow: { field: "attrs", value: "snowResistant", weight: 10 },
+  "snow resistant": { field: "attrs", value: "snowResistant", weight: 12 },
+  "withstand snow": { field: "attrs", value: "snowResistant", weight: 12 },
+  winter: { field: "attrs", value: "weatherResistant", weight: 8 },
+
+  // Price
+  cheap: { field: "priceRange", value: "budget", weight: 8 },
+  budget: { field: "priceRange", value: "budget", weight: 8 },
+  affordable: { field: "priceRange", value: "budget", weight: 6 },
+  premium: { field: "priceRange", value: "premium", weight: 8 },
+  "high end": { field: "priceRange", value: "premium", weight: 8 },
+
+  // Kids
+  kid: { field: "attrs", value: "kidFriendly", weight: 8 },
+  "kid friendly": { field: "attrs", value: "kidFriendly", weight: 10 },
+  "child friendly": { field: "attrs", value: "kidFriendly", weight: 10 },
+  kids: { field: "attrs", value: "kidFriendly", weight: 8 },
+  children: { field: "attrs", value: "kidFriendly", weight: 8 },
+
+  // Size keywords mapped loosely
+  large: { field: "length", value: "long", weight: 6 },
+  long: { field: "length", value: "long", weight: 6 },
+  short: { field: "length", value: "short", weight: 4 },
+  small: { field: "length", value: "short", weight: 4 },
+};
+
+function tokenize(text) {
+  return text.toLowerCase();
+}
+
+function scoreProduct(product, queryRaw, activeFilters) {
+  const query = tokenize(queryRaw);
+  const attrs = product.attrs;
+  let score = 0;
+  let maxPossible = 0;
+  const matched = new Set();
+
+  // Check each keyword entry (longest match first for phrases)
+  const sortedKeys = Object.keys(KEYWORD_MAP).sort((a,b) => b.length - a.length);
+
+  for (const kw of sortedKeys) {
+    if (query.includes(kw) && !matched.has(kw)) {
+      // Mark sub-words as matched too
+      kw.split(' ').forEach(w => matched.add(w));
+      matched.add(kw);
+      const rule = KEYWORD_MAP[kw];
+      maxPossible += rule.weight;
+
+      let hit = false;
+      if (rule.field === "placement") {
+        hit = attrs.placement.includes(rule.value);
+      } else if (rule.field === "lightType") {
+        hit = attrs.lightType.includes(rule.value);
+      } else if (rule.field === "color") {
+        hit = attrs.color.includes(rule.value);
+      } else if (rule.field === "tech") {
+        hit = attrs.tech.includes(rule.value);
+      } else if (rule.field === "useCase") {
+        hit = attrs.useCase.includes(rule.value);
+      } else if (rule.field === "style") {
+        hit = attrs.style.includes(rule.value);
+      } else if (rule.field === "priceRange") {
+        hit = attrs.priceRange === rule.value;
+      } else if (rule.field === "attrs") {
+        hit = !!attrs[rule.value];
+      } else if (rule.field === "length") {
+        if (rule.value === "long") hit = attrs.length >= 25;
+        if (rule.value === "short") hit = attrs.length <= 15;
+      }
+
+      if (hit) score += rule.weight;
+    }
+  }
+
+  // Apply active filters (hard filter — return -1 if not matching)
+  for (const f of activeFilters) {
+    const fl = f.toLowerCase();
+    if (fl === "indoor" && !attrs.placement.includes("indoor")) return -1;
+    if (fl === "outdoor" && !attrs.placement.includes("outdoor")) return -1;
+    if (fl === "led" && !attrs.tech.includes("led")) return -1;
+    if (fl === "incandescent" && !attrs.tech.includes("incandescent")) return -1;
+    if (fl === "multicolor" && !attrs.color.includes("multicolor")) return -1;
+    if (fl === "white" && !attrs.color.some(c => c.includes("white"))) return -1;
+    if (fl === "warm white" && !attrs.color.includes("warm white")) return -1;
+    if (fl === "cool white" && !attrs.color.includes("cool white")) return -1;
+  }
+
+  // If no query, return base score for filters-only mode
+  if (!queryRaw.trim()) {
+    return activeFilters.length > 0 ? 75 : 50;
+  }
+
+  if (maxPossible === 0) return 10; // no keywords recognized → low score
+  return Math.round((score / maxPossible) * 100);
+}
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let activeFilters = new Set();
+let currentScores = {};
+let hasSearched = false;
+
+// ═══════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════
+function setExample(el) {
+  document.getElementById('query').value = el.textContent;
+  doSearch();
+}
+
+function toggleFilter(el) {
+  const f = el.dataset.filter;
+  if (activeFilters.has(f)) {
+    activeFilters.delete(f);
+    el.classList.remove('active');
+  } else {
+    activeFilters.add(f);
+    el.classList.add('active');
+  }
+  if (hasSearched || activeFilters.size > 0) doSearch();
+}
+
+function doSearch() {
+  hasSearched = true;
+  const query = document.getElementById('query').value;
+  currentScores = {};
+  PRODUCTS.forEach(p => {
+    currentScores[p.id] = scoreProduct(p, query, activeFilters);
+  });
+  renderResults();
+}
+
+function renderResults() {
+  const sortVal = document.getElementById('sortSelect').value;
+  let filtered = PRODUCTS.filter(p => currentScores[p.id] !== -1);
+
+  if (sortVal === 'match') {
+    filtered.sort((a,b) => currentScores[b.id] - currentScores[a.id]);
+  } else if (sortVal === 'price-asc') {
+    filtered.sort((a,b) => a.price - b.price);
+  } else {
+    filtered.sort((a,b) => b.price - a.price);
+  }
+
+  const container = document.getElementById('results');
+  const countEl = document.getElementById('resultsCount');
+
+  if (!hasSearched && activeFilters.size === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="big-icon">🎄</div>
+      <h3>Find Your Perfect Christmas Lights</h3>
+      <p>Describe what you're looking for above, or use the filter chips to browse by category.<br>Try something like "<em>warm white icicle lights for outdoor roofline, snow resistant</em>".</p>
+    </div>`;
+    countEl.textContent = '';
+    return;
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="big-icon">🔍</div>
+      <h3>No Matches Found</h3>
+      <p>Try adjusting your description or removing some filters.</p>
+    </div>`;
+    countEl.textContent = '0 products';
+    return;
+  }
+
+  countEl.textContent = `${filtered.length} product${filtered.length !== 1 ? 's' : ''}`;
+  container.innerHTML = filtered.map(p => productCard(p, currentScores[p.id])).join('');
+}
+
+function productCard(p, pct) {
+  const badgeClass = pct >= 70 ? 'high' : pct >= 40 ? 'medium' : 'low';
+  const badgeText = hasSearched ? `${pct}% match` : '';
+
+  const swatchHTML = p.swatches.map(c =>
+    `<span class="swatch" style="background:${c}" title="${c}"></span>`
+  ).join('');
+
+  const tagList = [
+    ...p.attrs.placement.map(v => `<span class="tag ${v}">${v}</span>`),
+    ...p.attrs.tech.map(v => `<span class="tag ${v === 'led' ? 'led' : v === 'incandescent' ? 'inc' : ''}">${v.toUpperCase()}</span>`),
+    p.attrs.weatherResistant ? '<span class="tag outdoor">Weather Resistant</span>' : '',
+    p.attrs.snowResistant ? '<span class="tag outdoor">❄ Snow Proof</span>' : '',
+    p.attrs.batteryPowered ? '<span class="tag led">Battery</span>' : '',
+    p.attrs.solarPowered ? '<span class="tag led">☀ Solar</span>' : '',
+    p.attrs.kidFriendly ? '<span class="tag led">Kid Friendly</span>' : '',
+  ].filter(Boolean).join('');
+
+  const lengthText = p.attrs.length > 0 ? `${p.attrs.length} ft` : `${p.attrs.count} units`;
+  const countText = p.attrs.length > 0 ? `${p.attrs.count} lights` : '';
+
+  return `<div class="card">
+    ${hasSearched ? `<div class="match-badge ${badgeClass}">${badgeText}</div>` : ''}
+    <div class="card-swatch">
+      <span class="light-icon">${p.icon}</span>
+      ${swatchHTML}
+    </div>
+    <div class="card-name">${p.name}</div>
+    <div class="card-desc">${p.desc}</div>
+    <div class="card-tags">${tagList}</div>
+    <div class="card-footer">
+      <span class="price">$${p.price.toFixed(2)}</span>
+      <span class="card-meta">${lengthText}${countText ? ' · ' + countText : ''}</span>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// DECORATIONS
+// ═══════════════════════════════════════════
+function makeSnow() {
+  const layer = document.getElementById('snowLayer');
+  const flakes = ['❄','❅','❆','·','*','+'];
+  for (let i = 0; i < 40; i++) {
+    const f = document.createElement('span');
+    f.className = 'flake';
+    f.textContent = flakes[Math.floor(Math.random() * flakes.length)];
+    f.style.left = Math.random() * 100 + 'vw';
+    f.style.fontSize = (10 + Math.random() * 14) + 'px';
+    f.style.animationDuration = (8 + Math.random() * 14) + 's';
+    f.style.animationDelay = (-Math.random() * 20) + 's';
+    f.style.opacity = 0.3 + Math.random() * 0.5;
+    layer.appendChild(f);
+  }
+}
+
+function makeStars() {
+  const layer = document.getElementById('starLayer');
+  const stars = ['★','✦','✧','·'];
+  for (let i = 0; i < 25; i++) {
+    const s = document.createElement('div');
+    s.className = 'star-deco';
+    s.textContent = stars[Math.floor(Math.random() * stars.length)];
+    s.style.left = Math.random() * 100 + 'vw';
+    s.style.top = Math.random() * 100 + 'vh';
+    s.style.fontSize = (8 + Math.random() * 14) + 'px';
+    s.style.animationDelay = (Math.random() * 3) + 's';
+    s.style.animationDuration = (2 + Math.random() * 3) + 's';
+    layer.appendChild(s);
+  }
+}
+
+function makeHeaderLights() {
+  const el = document.getElementById('headerLights');
+  const colors = ['r','g','y','b','p'];
+  for (let i = 0; i < 36; i++) {
+    const b = document.createElement('div');
+    b.className = 'bulb ' + colors[i % colors.length];
+    b.style.animationDelay = (Math.random() * 1.5) + 's';
+    el.appendChild(b);
+  }
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+makeSnow();
+makeStars();
+makeHeaderLights();
+renderResults();
+
+document.getElementById('searchBtn').addEventListener('click', doSearch);
+document.getElementById('query').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSearch();
+});
+</script>
+</body>
+</html>
